@@ -1,0 +1,44 @@
+This project implements a Simple Stateful Network File Server (SSNFS) using Sun RPC.
+Clients interact with a remote virtual filesystem stored persistently on the server.
+The RPC server maintains a stateful open file table in memory and a persistent filesystem on disk.
+
+This design supports remote file creation, access, modification, and metadata listing while enforcing storage, user, and concurrency constraints.
+
+System Design Summary
+Feature                                     	Implementation
+Virtual Disk                          	disk.dat (16 MB fixed file, 512-byte block size)
+Blocks per File	                        64 blocks per file — fixed allocation
+Max Users	                            10 users (home directory based on login name)
+Max Files per User	                    10 files each
+Max Open Files	                        20 open files system-wide
+Persistence	                            disk.dat, files.dat, and pages.dat stored on server and reused after server restart
+Directory Structure	Flat                no subdirectories, one home directory per user
+Server State	                        Current open files tracked in memory (lost only if server crashes)
+
+Files are allocated sequentially in blocks to simplify layout and access logic.
+
+RPC Operations (Server-Side)
+
+The server exports the following operations:
+
+RPC Name	    Description
+create_file	    Create a new file in user’s home directory
+open_file	    Open an existing file, returns file descriptor
+write_file	    Write data to an open file at current file offset
+read_file	    Read from an open file at current file offset
+seek_position	Random-access seek to given position
+list_files	    List all files belonging to the user
+delete_file	    Remove an existing file if not open
+close_file	    Close an open file descriptor
+
+
+Meaningfull error messages: 
+1) zsh: bus error ./client localhost
+2) ld: 1 duplicate symbols clang: error: linker command failed with exit code 1 (use -v to see invocation) make: *** [server] Error 1
+3) ssnfs_clnt.c:19:55: error: incompatible function pointer types passing 'int (XDR *, open_output *)' (aka 'int (struct __rpc_xdr *, struct open_output *)') to parameter of type 'xdrproc_t' (aka 'int (*)(struct __rpc_xdr *, void *, unsigned int)') [-Wincompatible-function-pointer-types]
+4) ssnfs_svc.c:57:11: error: call to undeclared function 'getdtablesize'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+
+5) ssnfs_svc.c:65:9: error: call to undeclared function 'alarm'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+
+6) ssnfs_svc.c:195:9: error: call to undeclared function 'fork'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+
